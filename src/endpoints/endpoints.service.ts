@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EndpointEntity } from './entities/endpoint.entity';
+import { EndpointEntity } from '../database/entities/endpoint.entity';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
 import * as crypto from 'crypto';
 import { UpdateEndpointDto } from './dto/update-endpoint.dto';
@@ -42,9 +42,7 @@ export class EndpointsService {
   }
 
   async update(id: string, updateEndpointDto: UpdateEndpointDto): Promise<EndpointEntity | null> {
-    if (!(await this.findOne(id))) {
-      throw new NotFoundException(`Endpoint with ID ${id} not found`);
-    }
+    await this.findOne(id);
     await this.endpointRepository.update(id, updateEndpointDto);
     return this.findOne(id);
   }

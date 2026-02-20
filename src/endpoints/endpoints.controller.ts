@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Delete, Param, Query } from '@nestjs/common';
 import { EndpointsService } from './endpoints.service';
-import { EndpointEntity } from './entities/endpoint.entity';
+import { EndpointEntity } from '../database/entities/endpoint.entity';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
 import { UpdateEndpointDto } from './dto/update-endpoint.dto';
 import { GetEventsQueryDto } from '../events/dto/get-events-query.dto';

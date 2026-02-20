@@ -24,8 +24,8 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 
 ---
 
-## Current Phase: Phase 1 - Planning & Architecture
-**Status:** MVP scope agreed, starting Milestone 3
+## Current Phase: Phase 1 - Implementation
+**Status:** Milestone 3 in progress — Destination CRUD complete, forwarding next
 
 ---
 
@@ -54,11 +54,35 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 ### ADR-005: Destination headers
 - Essential even for MVP — destinations need auth headers, content types, etc.
 
+### ADR-006: Flat routes for destinations
+- Destinations use flat routes (`/destinations`) instead of nested (`/endpoints/:id/destinations`)
+- List endpoint requires `endpointId` query param — no unfiltered listing
+- Rationale: better separation of concerns, cleaner module boundaries, easier future extraction
+
+### ADR-007: 422 for invalid foreign key references
+- When creating/updating a destination with a non-existent `endpointId`, return 422 Unprocessable Entity (not 404)
+- 404 is reserved for when the primary resource in the URL path isn't found
+- 422 signals "your request body has a problem" — more debuggable for API consumers
+
+### ADR-008: Destinations can be moved between endpoints
+- `endpointId` is updatable via PATCH — allows reassigning a destination to a different endpoint
+- Update validates the new endpoint exists before saving
+
 ---
 
 ## Coaching Notes
 - Developer is new to how webhooks work in practice — explain business logic, real-world patterns, and what webhook senders actually do (signatures, retries, idempotency keys, etc.) as we encounter them
 - Guide through NestJS patterns (modules, services, controllers, DTOs, pipes) as they come up
+- Developer uses VS Code with GitHub Copilot — remind to review suggestions critically, especially validation decorators and HTTP status codes
+
+## Resume Point
+**Next task:** Synchronous forwarding — when `POST /webhooks/:slug` receives an event, forward it to all active destinations for that endpoint and log delivery attempts.
+
+Key design questions to resolve when resuming:
+1. Where does forwarding logic live? (new service vs existing)
+2. How to make outbound HTTP calls (NestJS HttpModule / Axios)
+3. Failure isolation — should one failed destination block others?
+4. What to populate in DeliveryAttemptEntity for success vs failure cases
 
 ---
 
@@ -176,8 +200,12 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 - [x] Refactored: DatabaseModule as shared entity registration (no circular deps)
 - [x] Refactored: NotFoundException handling moved into services, controllers stay thin
 
-### Milestone 3: Forwarding & Delivery (Week 2-3) — NOT STARTED
-- [ ] Destination management (CRUD for where events get forwarded)
+### Milestone 3: Forwarding & Delivery (Week 2-3) — IN PROGRESS
+- [x] Destination management (CRUD for where events get forwarded)
+  - DestinationsModule with controller, service, DTOs (create, update, get-query)
+  - HttpMethods enum for validation
+  - Flat routes: POST/GET/GET:id/PATCH/DELETE on `/destinations`
+  - `validateEndpoint()` helper — reused across create, list, and update
 - [ ] Synchronous forwarding to destinations
 - [ ] Delivery attempt logging (success/failure/status code)
 

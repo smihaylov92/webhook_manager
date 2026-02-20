@@ -1,7 +1,7 @@
-import { DestinationEntity } from '@/endpoints/entities/destination.entity';
-import { EndpointEntity } from '@/endpoints/entities/endpoint.entity';
-import { EventEntity } from '@/endpoints/entities/event.entity';
-import { DeliveryAttemptEntity } from '@/endpoints/entities/delivery-attempt.entity';
+import { DestinationEntity } from '@/database/entities/destination.entity';
+import { EndpointEntity } from '@/database/entities/endpoint.entity';
+import { EventEntity } from '@/database/entities/event.entity';
+import { DeliveryAttemptEntity } from '@/database/entities/delivery-attempt.entity';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';

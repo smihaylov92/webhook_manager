@@ -1,6 +1,6 @@
 import { Controller, Param, Post, Req } from '@nestjs/common';
 import { EventsService } from './events.service';
-import { EventEntity } from '@/endpoints/entities/event.entity';
+import { EventEntity } from '@/database/entities/event.entity';
 import type { Request } from 'express';
 import type { IEvent } from '@/endpoints/interfaces/event.interface';
 

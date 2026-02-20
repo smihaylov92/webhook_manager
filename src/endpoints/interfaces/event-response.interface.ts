@@ -1,4 +1,4 @@
-import type { EventEntity } from '../entities/event.entity';
+import type { EventEntity } from '../../database/entities/event.entity';
 
 export interface IEventResponse {
   data: EventEntity[];

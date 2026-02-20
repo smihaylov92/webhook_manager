@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { EndpointsModule } from './endpoints/endpoints.module';
 import { EventsModule } from './events/events.module';
+import { DestinationsModule } from './destinations/destinations.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -13,6 +14,7 @@ import configuration from './config/configuration';
     DatabaseModule,
     EndpointsModule,
     EventsModule,
+    DestinationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
