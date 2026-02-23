@@ -6,6 +6,8 @@ import type { IEvent } from '@/endpoints/interfaces/event.interface';
 import { GetEventsQueryDto } from './dto/get-events-query.dto';
 import { IEventResponse } from '@/endpoints/interfaces/event-response.interface';
 import { EndpointEntity } from '@/database/entities/endpoint.entity';
+import { DeliveryService } from '@/delivery/delivery.service';
+import { DestinationEntity } from '@/database/entities/destination.entity';
 
 @Injectable()
 export class EventsService {
@@ -14,10 +16,15 @@ export class EventsService {
     private readonly eventRepository: Repository<EventEntity>,
     @InjectRepository(EndpointEntity)
     private readonly endpointRepository: Repository<EndpointEntity>,
+    @InjectRepository(DestinationEntity)
+    private readonly destinationRepository: Repository<DestinationEntity>,
+    private readonly deliveryService: DeliveryService,
   ) {}
 
   async createEvent(slug: string, event: IEvent): Promise<EventEntity> {
-    const endpoint = await this.endpointRepository.findOne({ where: { slug } });
+    const endpoint = await this.endpointRepository.findOne({
+      where: { slug },
+    });
     if (!endpoint) {
       throw new NotFoundException('Endpoint not found');
     }
@@ -28,7 +35,12 @@ export class EventsService {
     };
 
     const createdEvent = this.eventRepository.create(newEvent);
-    return this.eventRepository.save(createdEvent);
+    const savedEvent = await this.eventRepository.save(createdEvent);
+    const destinations = await this.destinationRepository.find({
+      where: { endpointId: endpoint.id, isActive: true },
+    });
+    await this.deliveryService.forwardEventToDestination(savedEvent, destinations);
+    return savedEvent;
   }
 
   async getEventsBySlug(slug: string, query: GetEventsQueryDto): Promise<IEventResponse> {

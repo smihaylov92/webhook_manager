@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { EndpointsModule } from './endpoints/endpoints.module';
 import { EventsModule } from './events/events.module';
 import { DestinationsModule } from './destinations/destinations.module';
+import { DeliveryModule } from './delivery/delivery.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -15,6 +16,7 @@ import configuration from './config/configuration';
     EndpointsModule,
     EventsModule,
     DestinationsModule,
+    DeliveryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

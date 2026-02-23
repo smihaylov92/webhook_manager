@@ -25,7 +25,7 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 ---
 
 ## Current Phase: Phase 1 - Implementation
-**Status:** Milestone 3 in progress — Destination CRUD complete, forwarding next
+**Status:** Milestone 3 complete, starting Milestone 4
 
 ---
 
@@ -76,13 +76,13 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 - Developer uses VS Code with GitHub Copilot — remind to review suggestions critically, especially validation decorators and HTTP status codes
 
 ## Resume Point
-**Next task:** Synchronous forwarding — when `POST /webhooks/:slug` receives an event, forward it to all active destinations for that endpoint and log delivery attempts.
+**Next task:** Milestone 4 — Reliability (Redis + BullMQ, retry logic, dead letter handling)
 
-Key design questions to resolve when resuming:
-1. Where does forwarding logic live? (new service vs existing)
-2. How to make outbound HTTP calls (NestJS HttpModule / Axios)
-3. Failure isolation — should one failed destination block others?
-4. What to populate in DeliveryAttemptEntity for success vs failure cases
+Key context:
+- Forwarding is currently synchronous — happens inside the webhook request
+- Milestone 4 moves forwarding to async background jobs with BullMQ
+- DeliveryService is isolated, so the change is mostly internal to that module
+- DeliveryAttemptEntity already has `nextRetryAt` column ready for retry scheduling
 
 ---
 
@@ -200,14 +200,22 @@ Key design questions to resolve when resuming:
 - [x] Refactored: DatabaseModule as shared entity registration (no circular deps)
 - [x] Refactored: NotFoundException handling moved into services, controllers stay thin
 
-### Milestone 3: Forwarding & Delivery (Week 2-3) — IN PROGRESS
+### Milestone 3: Forwarding & Delivery (Week 2-3) — COMPLETE
 - [x] Destination management (CRUD for where events get forwarded)
   - DestinationsModule with controller, service, DTOs (create, update, get-query)
   - HttpMethods enum for validation
   - Flat routes: POST/GET/GET:id/PATCH/DELETE on `/destinations`
   - `validateEndpoint()` helper — reused across create, list, and update
-- [ ] Synchronous forwarding to destinations
-- [ ] Delivery attempt logging (success/failure/status code)
+- [x] Synchronous forwarding to destinations
+  - DeliveryModule with DeliveryService, uses NestJS HttpModule (@nestjs/axios)
+  - `forwardEventToDestination()` loops through active destinations independently
+  - Uses `firstValueFrom()` to convert HttpService Observables to Promises
+  - Each destination gets its own try/catch — one failure doesn't block others
+- [x] Delivery attempt logging (success/failure/status code)
+  - Creates pending DeliveryAttempt before HTTP call, updates with result after
+  - Success: logs responseStatusCode, responseBody
+  - Failure: logs AxiosError details — statusCode (if available), errorMessage
+  - Tested with httpbin.org/post (200 success) and httpbin.org/status/500 (failure)
 
 ### Milestone 4: Reliability (Week 3-4) — NOT STARTED
 - [ ] Introduce Redis + BullMQ

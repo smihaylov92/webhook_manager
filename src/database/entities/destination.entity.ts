@@ -20,7 +20,7 @@ export class DestinationEntity {
   httpMethod!: string;
 
   @Column('json', { nullable: true })
-  headers!: JSON;
+  headers!: Record<string, string>;
 
   @Column()
   url!: string;
