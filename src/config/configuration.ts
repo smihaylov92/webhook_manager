@@ -6,6 +6,10 @@ interface Config {
     username: string;
     password: string;
   };
+  redis: {
+    host: string;
+    port: number;
+  };
 }
 
 export default (): Config => ({
@@ -15,5 +19,9 @@ export default (): Config => ({
     name: process.env.DB_NAME ?? '',
     username: process.env.DB_USERNAME ?? '',
     password: process.env.DB_PASSWORD ?? '',
+  },
+  redis: {
+    host: process.env.REDIS_HOST ?? 'localhost',
+    port: Number(process.env.REDIS_PORT) || 6379,
   },
 });

@@ -25,7 +25,7 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 ---
 
 ## Current Phase: Phase 1 - Implementation
-**Status:** Milestone 3 complete, starting Milestone 4
+**Status:** Milestone 4 complete, starting Milestone 5
 
 ---
 
@@ -68,6 +68,21 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 - `endpointId` is updatable via PATCH — allows reassigning a destination to a different endpoint
 - Update validates the new endpoint exists before saving
 
+### ADR-009: BullMQ over RabbitMQ for job queue
+- BullMQ chosen for retry/delivery jobs — built-in retries, backoff, NestJS integration
+- RabbitMQ deferred — overkill for single-service job processing, adds AMQP complexity
+- Redis serves as BullMQ backend (also useful for future caching)
+
+### ADR-010: One job per event-destination pair
+- Each delivery is a separate BullMQ job with its own retry lifecycle
+- Allows granular retries — failed destination X retries independently of successful destination Y
+- Job payload carries full event + destination data (option A: no DB fetch in worker, data captured at queue time)
+
+### ADR-011: Single DeliveryModule for producer + consumer
+- Producer (DeliveryService) and consumer (DeliveryProcessor) in same module
+- Both are part of the "delivery" concern — splitting would separate related logic
+- DeliveryService is the public interface; queue internals are implementation details
+
 ---
 
 ## Coaching Notes
@@ -76,13 +91,13 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 - Developer uses VS Code with GitHub Copilot — remind to review suggestions critically, especially validation decorators and HTTP status codes
 
 ## Resume Point
-**Next task:** Milestone 4 — Reliability (Redis + BullMQ, retry logic, dead letter handling)
+**Next task:** Milestone 5 — Developer Experience (event inspection, replay, validation)
 
 Key context:
-- Forwarding is currently synchronous — happens inside the webhook request
-- Milestone 4 moves forwarding to async background jobs with BullMQ
-- DeliveryService is isolated, so the change is mostly internal to that module
-- DeliveryAttemptEntity already has `nextRetryAt` column ready for retry scheduling
+- Delivery is now async via BullMQ (DeliveryService produces, DeliveryProcessor consumes)
+- Full retry cycle working: pending → retry (60s) → retry (60s) → failed
+- All 4 entities in use: Endpoint, Destination, Event, DeliveryAttempt
+- Developer also wants automated testing of the flow (noted for Milestone 5 planning)
 
 ---
 
@@ -217,11 +232,26 @@ Key context:
   - Failure: logs AxiosError details — statusCode (if available), errorMessage
   - Tested with httpbin.org/post (200 success) and httpbin.org/status/500 (failure)
 
-### Milestone 4: Reliability (Week 3-4) — NOT STARTED
-- [ ] Introduce Redis + BullMQ
-- [ ] Retry logic with exponential backoff
-- [ ] Delivery status tracking (pending → delivered → failed)
-- [ ] Dead letter handling (events that permanently fail)
+### Milestone 4: Reliability (Week 3-4) — COMPLETE
+- [x] Introduce Redis + BullMQ
+  - Redis added to Docker Compose with persistent volume
+  - BullModule.forRootAsync with ConfigService for Redis connection
+  - Redis host/port configurable via environment variables
+- [x] Retry logic with fixed backoff
+  - 3 attempts total, 60s fixed delay between retries
+  - BullMQ job config: `{ attempts: 3, backoff: { type: 'fixed', delay: 60000 } }`
+  - Uses `job.attemptsMade` and `job.opts.attempts` for attempt tracking
+- [x] Delivery status tracking (pending → success/failed)
+  - DeliveryAttempt created as PENDING before queuing
+  - Processor updates status to SUCCESS or FAILED after each attempt
+  - attemptNumber tracked (1-based) on each retry
+- [x] Dead letter handling (events that permanently fail)
+  - After max attempts, status set to FAILED with full error details
+  - errorMessage, responseStatusCode, responseBody all captured
+- [x] Async delivery via job queue
+  - DeliveryService (producer) queues one job per event-destination pair
+  - DeliveryProcessor (consumer) extends WorkerHost, handles HTTP calls
+  - Webhook response time ~25ms (vs waiting for all HTTP calls synchronously)
 
 ### Milestone 5: Developer Experience (Week 4-5) — NOT STARTED
 - [ ] Event inspection API (view payload, headers, delivery attempts)
