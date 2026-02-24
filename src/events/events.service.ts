@@ -43,6 +43,17 @@ export class EventsService {
     return savedEvent;
   }
 
+  async getEventById(id: string): Promise<EventEntity> {
+    const event = await this.eventRepository.findOne({
+      where: { id },
+      relations: ['deliveryAttempts'],
+    });
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+    return event;
+  }
+
   async getEventsBySlug(slug: string, query: GetEventsQueryDto): Promise<IEventResponse> {
     const endpoint = await this.endpointRepository.findOne({ where: { slug } });
     if (!endpoint) {
