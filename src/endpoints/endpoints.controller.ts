@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Delete, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Delete,
+  Param,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { EndpointsService } from './endpoints.service';
 import { EndpointEntity } from '../database/entities/endpoint.entity';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
@@ -33,20 +43,20 @@ export class EndpointsController {
   }
 
   @Get(':id')
-  async getOne(@Param('id') id: string): Promise<EndpointEntity | null> {
+  async getOne(@Param('id', ParseUUIDPipe) id: string): Promise<EndpointEntity | null> {
     return await this.endpointsService.findOne(id);
   }
 
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateEndpointDto: UpdateEndpointDto,
   ): Promise<EndpointEntity | null> {
     return await this.endpointsService.update(id, updateEndpointDto);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.endpointsService.delete(id);
   }
 }

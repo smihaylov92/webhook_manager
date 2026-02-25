@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Patch, Delete, Query, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Query,
+  Body,
+  Param,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { DestinationsService } from './destinations.service';
 import { GetDestinationsQueryDto } from './dto/get-destinations-query.dto';
 import { CreateDestinationDto } from './dto/create-destination.dto';
@@ -20,20 +30,20 @@ export class DestinationsController {
   }
 
   @Get(':id')
-  async getOne(@Param('id') id: string): Promise<DestinationEntity> {
+  async getOne(@Param('id', ParseUUIDPipe) id: string): Promise<DestinationEntity> {
     return await this.destinationsService.findOne(id);
   }
 
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDestinationDto: UpdateDestinationDto,
   ): Promise<DestinationEntity> {
     return await this.destinationsService.update(id, updateDestinationDto);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.destinationsService.delete(id);
   }
 }
