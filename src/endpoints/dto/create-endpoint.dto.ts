@@ -1,7 +1,8 @@
-import { IsString, IsOptional, Matches } from 'class-validator';
+import { IsString, IsOptional, Matches, IsNotEmpty } from 'class-validator';
 
 export class CreateEndpointDto {
   @IsString()
+  @IsNotEmpty()
   name!: string;
 
   @IsOptional()

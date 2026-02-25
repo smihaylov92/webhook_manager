@@ -1,5 +1,13 @@
 import { HttpMethods } from '@/common/enums/http-methods.enum';
-import { IsOptional, IsUUID, IsUrl, IsObject, IsBoolean, IsEnum } from 'class-validator';
+import {
+  IsOptional,
+  IsUUID,
+  IsUrl,
+  IsObject,
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class CreateDestinationDto {
   @IsUUID()
@@ -10,9 +18,10 @@ export class CreateDestinationDto {
 
   @IsObject()
   @IsOptional()
-  headers?: Record<string, string>;
+  headers?: Record<string, string> = {};
 
   @IsUrl()
+  @IsNotEmpty()
   url!: string;
 
   @IsBoolean()
