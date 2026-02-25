@@ -91,13 +91,14 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 - Developer uses VS Code with GitHub Copilot — remind to review suggestions critically, especially validation decorators and HTTP status codes
 
 ## Resume Point
-**Next task:** Milestone 5 — Developer Experience (event inspection, replay, validation)
+**Next task:** Milestone 6 — Event Streaming with Kafka
 
 Key context:
-- Delivery is now async via BullMQ (DeliveryService produces, DeliveryProcessor consumes)
-- Full retry cycle working: pending → retry (60s) → retry (60s) → failed
-- All 4 entities in use: Endpoint, Destination, Event, DeliveryAttempt
-- Developer also wants automated testing of the flow (noted for Milestone 5 planning)
+- Milestones 1-5 complete — full MVP with CRUD, ingestion, async delivery, retries, inspection, and testing
+- 52 unit tests across all services and DeliveryProcessor (6 suites)
+- ParseUUIDPipe on all UUID route params, stricter DTO validation
+- E2e testing deferred to a future milestone
+- Developer wants to learn Kafka next for event-driven architecture
 
 ---
 
@@ -253,10 +254,13 @@ Key context:
   - DeliveryProcessor (consumer) extends WorkerHost, handles HTTP calls
   - Webhook response time ~25ms (vs waiting for all HTTP calls synchronously)
 
-### Milestone 5: Developer Experience (Week 4-5) — NOT STARTED
-- [ ] Event inspection API (view payload, headers, delivery attempts)
-- [ ] Replay endpoint (re-send a failed event)
-- [ ] Basic request validation & error handling
+### Milestone 5: Developer Experience (Week 4-5) — COMPLETE
+- [x] Event inspection API (`GET /events/:id` with delivery attempts)
+- [x] Replay endpoint (`POST /delivery-attempts/:id/retry`)
+- [x] Unit tests (52 tests across 6 suites — all services + DeliveryProcessor)
+- [x] ParseUUIDPipe validation on all UUID route params
+- [x] Stricter DTO validation (IsNotEmpty, default headers)
+- [ ] E2e testing (deferred to future milestone)
 
 ---
 
