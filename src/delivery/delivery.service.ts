@@ -10,6 +10,7 @@ import { Queue } from 'bullmq';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
+import { IWebhookEventMessage } from '@/common/interfaces/webhook-event-message.interface';
 
 @Injectable()
 export class DeliveryService {
@@ -96,12 +97,12 @@ export class DeliveryService {
   }
 
   async forwardEventToDestination(
-    event: EventEntity,
+    event: IWebhookEventMessage,
     destinations: DestinationEntity[],
   ): Promise<void> {
     for (const destination of destinations) {
       const deliveryAttempt = this.deliveryAttemptRepository.create({
-        event: event,
+        event: { id: event.id } as EventEntity,
         destination: destination,
         status: DeliveryStatus.PENDING,
       });

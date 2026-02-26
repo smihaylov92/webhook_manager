@@ -6,8 +6,7 @@ import type { IEvent } from '@/endpoints/interfaces/event.interface';
 import { GetEventsQueryDto } from './dto/get-events-query.dto';
 import { IEventResponse } from '@/endpoints/interfaces/event-response.interface';
 import { EndpointEntity } from '@/database/entities/endpoint.entity';
-import { DeliveryService } from '@/delivery/delivery.service';
-import { DestinationEntity } from '@/database/entities/destination.entity';
+import { KafkaProducer } from '@/kafka/kafka.producer';
 
 @Injectable()
 export class EventsService {
@@ -16,9 +15,7 @@ export class EventsService {
     private readonly eventRepository: Repository<EventEntity>,
     @InjectRepository(EndpointEntity)
     private readonly endpointRepository: Repository<EndpointEntity>,
-    @InjectRepository(DestinationEntity)
-    private readonly destinationRepository: Repository<DestinationEntity>,
-    private readonly deliveryService: DeliveryService,
+    private readonly kafkaProducer: KafkaProducer,
   ) {}
 
   async createEvent(slug: string, event: IEvent): Promise<EventEntity> {
@@ -36,10 +33,13 @@ export class EventsService {
 
     const createdEvent = this.eventRepository.create(newEvent);
     const savedEvent = await this.eventRepository.save(createdEvent);
-    const destinations = await this.destinationRepository.find({
-      where: { endpointId: endpoint.id, isActive: true },
+    await this.kafkaProducer.sendMessage('webhook-events', {
+      id: savedEvent.id,
+      endpointId: endpoint.id,
+      method: savedEvent.method,
+      headers: savedEvent.headers,
+      body: savedEvent.body,
     });
-    await this.deliveryService.forwardEventToDestination(savedEvent, destinations);
     return savedEvent;
   }
 

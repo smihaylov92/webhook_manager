@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { EventsController } from './events.controller';
 import { DatabaseModule } from '@/database/database.module';
 import { EventsService } from './events.service';
-import { DeliveryModule } from '@/delivery/delivery.module';
 import { EventsInspectionController } from './events-inspection.controller';
+import { KafkaModule } from '@/kafka/kafka.module';
 
 @Module({
-  imports: [DatabaseModule, DeliveryModule],
+  imports: [DatabaseModule, KafkaModule],
   providers: [EventsService],
   controllers: [EventsController, EventsInspectionController],
   exports: [EventsService],

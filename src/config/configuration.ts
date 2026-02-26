@@ -10,6 +10,9 @@ interface Config {
     host: string;
     port: number;
   };
+  kafka: {
+    broker: string;
+  };
 }
 
 export default (): Config => ({
@@ -23,5 +26,8 @@ export default (): Config => ({
   redis: {
     host: process.env.REDIS_HOST ?? 'localhost',
     port: Number(process.env.REDIS_PORT) || 6379,
+  },
+  kafka: {
+    broker: process.env.KAFKA_BROKER ?? 'localhost:9092',
   },
 });

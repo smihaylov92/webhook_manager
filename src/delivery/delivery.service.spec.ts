@@ -7,6 +7,7 @@ import { DeliveryStatus } from '@/common/enums/delivery-status.enum';
 import { HttpService } from '@nestjs/axios';
 import type { EventEntity } from '@/database/entities/event.entity';
 import type { DestinationEntity } from '@/database/entities/destination.entity';
+import type { IWebhookEventMessage } from '@/common/interfaces/webhook-event-message.interface';
 import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { of, throwError } from 'rxjs';
 import type { AxiosError } from 'axios';
@@ -28,10 +29,13 @@ const mockHttpService = {
 };
 
 // Test data — build once, reuse across tests
-const mockEvent = {
+const mockEvent: IWebhookEventMessage = {
   id: 'event-123',
+  endpointId: 'endpoint-001',
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
   body: { event: 'payment.success', amount: 49.99 },
-} as unknown as EventEntity;
+};
 
 const mockDestination = {
   id: 'dest-456',
@@ -96,7 +100,7 @@ describe('DeliveryService', () => {
 
       // Assert: verify the delivery attempt was created with correct data
       expect(mockDeliveryAttemptRepository.create).toHaveBeenCalledWith({
-        event: mockEvent,
+        event: { id: mockEvent.id },
         destination: mockDestination,
         status: DeliveryStatus.PENDING,
       });
@@ -282,7 +286,7 @@ describe('DeliveryService', () => {
       });
 
       await expect(
-        service.attemptDelivery(mockEvent, mockDestination, mockDeliveryAttempt),
+        service.attemptDelivery(mockEvent as unknown as EventEntity, mockDestination, mockDeliveryAttempt),
       ).resolves.toEqual({
         ...mockDeliveryAttempt,
         status: DeliveryStatus.SUCCESS,

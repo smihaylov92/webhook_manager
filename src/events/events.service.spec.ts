@@ -3,8 +3,7 @@ import { EventsService } from './events.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { EventEntity } from '@/database/entities/event.entity';
 import { EndpointEntity } from '@/database/entities/endpoint.entity';
-import { DestinationEntity } from '@/database/entities/destination.entity';
-import { DeliveryService } from '@/delivery/delivery.service';
+import { KafkaProducer } from '@/kafka/kafka.producer';
 import { NotFoundException } from '@nestjs/common';
 import type { IEvent } from '@/endpoints/interfaces/event.interface';
 
@@ -19,12 +18,8 @@ const mockEndpointRepository = {
   findOne: jest.fn(),
 };
 
-const mockDestinationRepository = {
-  find: jest.fn(),
-};
-
-const mockDeliveryService = {
-  forwardEventToDestination: jest.fn(),
+const mockKafkaProducer = {
+  sendMessage: jest.fn(),
 };
 
 const mockEndpoint = {
@@ -49,15 +44,6 @@ const mockEvent = {
   sourceIp: 'test-ip',
 } as unknown as EventEntity;
 
-const mockDestination = {
-  id: 'dest-789',
-  endpointId: 'endpoint-123',
-  url: 'https://example.com/webhook',
-  httpMethod: 'POST',
-  headers: {},
-  isActive: true,
-} as unknown as DestinationEntity;
-
 describe('EventsService', () => {
   let service: EventsService;
 
@@ -76,12 +62,8 @@ describe('EventsService', () => {
           useValue: mockEndpointRepository,
         },
         {
-          provide: getRepositoryToken(DestinationEntity),
-          useValue: mockDestinationRepository,
-        },
-        {
-          provide: DeliveryService,
-          useValue: mockDeliveryService,
+          provide: KafkaProducer,
+          useValue: mockKafkaProducer,
         },
       ],
     }).compile();
@@ -94,12 +76,11 @@ describe('EventsService', () => {
   });
 
   describe('createEvent', () => {
-    it('should create an event and forward to destinations', async () => {
+    it('should create an event and publish to Kafka', async () => {
       mockEndpointRepository.findOne.mockResolvedValue(mockEndpoint);
       mockEventRepository.create.mockReturnValue(mockEvent);
       mockEventRepository.save.mockResolvedValue(mockEvent);
-      mockDestinationRepository.find.mockResolvedValue([mockDestination]);
-      mockDeliveryService.forwardEventToDestination.mockResolvedValue(undefined);
+      mockKafkaProducer.sendMessage.mockResolvedValue(undefined);
 
       const result = await service.createEvent('my-endpoint', mockEventParam);
 
@@ -115,12 +96,13 @@ describe('EventsService', () => {
         sourceIp: mockEvent.sourceIp,
       });
       expect(mockEventRepository.save).toHaveBeenCalledWith(mockEvent);
-      expect(mockDestinationRepository.find).toHaveBeenCalledWith({
-        where: { endpointId: mockEndpoint.id, isActive: true },
+      expect(mockKafkaProducer.sendMessage).toHaveBeenCalledWith('webhook-events', {
+        id: mockEvent.id,
+        endpointId: mockEndpoint.id,
+        method: mockEvent.method,
+        headers: mockEvent.headers,
+        body: mockEvent.body,
       });
-      expect(mockDeliveryService.forwardEventToDestination).toHaveBeenCalledWith(mockEvent, [
-        mockDestination,
-      ]);
     });
 
     it('should throw NotFoundException if endpoint does not exist', async () => {

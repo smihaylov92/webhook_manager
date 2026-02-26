@@ -260,7 +260,7 @@ Key context:
 - [x] Unit tests (52 tests across 6 suites — all services + DeliveryProcessor)
 - [x] ParseUUIDPipe validation on all UUID route params
 - [x] Stricter DTO validation (IsNotEmpty, default headers)
-- [ ] E2e testing (deferred to future milestone)
+
 
 ---
 
@@ -286,7 +286,20 @@ Key context:
 - [ ] Environment config & secrets management (Azure Key Vault)
 - [ ] CI/CD pipeline (GitHub Actions → build → push → deploy)
 
-### Milestone 8: Frontend — NOT STARTED
+### Milestone 8: NestJS Best Practices Hardening — NOT STARTED
+**Learning goal:** Production-grade patterns, error handling, observability basics
+**Quick wins:**
+- [ ] Graceful shutdown (`app.enableShutdownHooks()` in main.ts)
+- [ ] Health check endpoint (`@nestjs/terminus` with DB + Redis checks)
+- [ ] Structured logging (NestJS `Logger` in services)
+**Deeper work:**
+- [ ] Global exception filter for consistent error response format
+- [ ] Transactions for multi-step operations (e.g. `createEvent`)
+- [ ] Response serialization (DTOs for API responses, ClassSerializerInterceptor)
+- [ ] Logging interceptor for cross-cutting request/response logging
+- [ ] Event-driven decoupling (EventEmitter between services instead of direct calls)
+
+### Milestone 9: Frontend — NOT STARTED
 **Learning goal:** React + TypeScript, TailwindCSS + shadcn/ui, Zustand, TanStack Query + Router
 - [ ] Project setup (Vite + React + TypeScript + TailwindCSS + shadcn/ui)
 - [ ] TanStack Router setup (file-based routing)
@@ -298,22 +311,23 @@ Key context:
 - [ ] Delivery attempt details & status
 - [ ] Real-time updates (polling via TanStack Query refetchInterval or WebSockets)
 
-### Milestone 9: Smart Routing & Transformations — NOT STARTED
+### Milestone 10: Smart Routing & Transformations — NOT STARTED
 **Learning goal:** Rule engines, payload manipulation, webhook ecosystem patterns
 - [ ] Webhook signature verification (HMAC — Stripe, GitHub, Shopify patterns)
 - [ ] Routing rules — filter events by payload content before forwarding
 - [ ] Payload transformation — map/reshape data before sending to destinations
 - [ ] Header injection & dynamic headers per destination
 
-### Milestone 10: Authentication & Multi-tenancy — NOT STARTED
+### Milestone 11: Authentication & Multi-tenancy — NOT STARTED
 **Learning goal:** Auth patterns, JWT, API keys, tenant isolation
 - [ ] API key authentication for endpoint access
 - [ ] User accounts & JWT-based auth for management API
 - [ ] Workspace/tenant isolation — each tenant sees only their own data
 - [ ] Role-based access control (admin vs viewer)
 
-### Milestone 11: Production Hardening — NOT STARTED
+### Milestone 12: Production Hardening — NOT STARTED
 **Learning goal:** Kubernetes, observability, operating production systems
+- [ ] Migrate Kafka from raw kafkajs to `@nestjs/microservices` Kafka transport
 - [ ] Migrate from Azure Container Apps to AKS (Azure Kubernetes Service)
 - [ ] Horizontal scaling & autoscaling policies
 - [ ] Structured logging (Pino or Winston)
@@ -321,3 +335,12 @@ Key context:
 - [ ] Distributed tracing (OpenTelemetry)
 - [ ] Rate limiting & deduplication
 - [ ] Health checks & readiness/liveness probes
+
+### Milestone 13: E2E Testing — NOT STARTED
+**Learning goal:** Integration testing, test database isolation, supertest
+- [ ] Test database setup (separate `webhooks_test` DB)
+- [ ] Shared e2e test helper (bootstrap, migration, cleanup between tests)
+- [ ] Endpoint CRUD e2e tests
+- [ ] Destination CRUD e2e tests
+- [ ] Webhook ingestion + delivery flow e2e tests
+- [ ] Event inspection + pagination e2e tests

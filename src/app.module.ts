@@ -10,6 +10,7 @@ import configuration from './config/configuration';
 import { ConfigService } from '@nestjs/config';
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
+import { KafkaModule } from './kafka/kafka.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AppController } from '@/app.controller';
         },
       }),
     }),
+    KafkaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
