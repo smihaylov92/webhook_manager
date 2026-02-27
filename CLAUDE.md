@@ -100,7 +100,7 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 - Developer uses VS Code with GitHub Copilot — remind to review suggestions critically, especially validation decorators and HTTP status codes
 
 ## Resume Point
-**Next task:** Milestone 7 — Containerization & Azure Deployment
+**Next task:** Milestone 7 — Containerization & Azure Deployment (start with Production Dockerfile)
 
 Key context:
 - Milestones 1-6 complete — full MVP + Kafka event streaming pipeline
@@ -110,6 +110,7 @@ Key context:
 - Dead letter topic (`webhook-events-dlq`): consumer retries 3 times, then sends failed messages to DLQ with error context
 - Consumer never blocks partitions — all errors handled gracefully with DLQ fallback
 - E2e testing deferred to Milestone 13
+- Milestone 7 cost constraint: $0/month, Azure first-year free tier, Kafka/Redis as containers (not managed services)
 
 ---
 
@@ -306,11 +307,26 @@ Key context:
 
 ### Milestone 7: Containerization & Azure Deployment — NOT STARTED
 **Learning goal:** Docker production builds, cloud services, managed infrastructure
+**Cost constraint:** $0/month — use Azure first-year free tier + free-grant services only
+**Azure account:** First year (12-month free services still available)
+
+**Free services being used:**
+- Azure Database for PostgreSQL Flexible Server (B1ms) — free for 12 months (750 hrs/month)
+- Azure Container Apps — free grant (180k vCPU-sec/month)
+- Azure Key Vault — always free (10k operations/month)
+- GitHub Container Registry (ghcr.io) — free (replaces paid Azure Container Registry)
+- GitHub Actions — free (2k minutes/month public, 500 private)
+
+**Skipped paid services (can add later):**
+- Azure Event Hubs (~$11/month) — running Kafka as container instead
+- Azure Cache for Redis (~$13/month) — running Redis as container instead
+- Azure Container Registry (~$5/month) — using GitHub Container Registry instead
+
+**Tasks:**
 - [ ] Production Dockerfile (multi-stage build)
-- [ ] Azure Container Registry (ACR) — push images
-- [ ] Azure Database for PostgreSQL — managed DB
-- [ ] Azure Event Hubs — managed Kafka-compatible broker
-- [ ] Azure Cache for Redis — managed Redis
+- [ ] GitHub Container Registry (ghcr.io) — push images
+- [ ] Azure Database for PostgreSQL — managed DB (free 12-month tier)
+- [ ] Kafka + Redis as containers in Container Apps (instead of managed services)
 - [ ] Azure Container Apps — deploy the application
 - [ ] Environment config & secrets management (Azure Key Vault)
 - [ ] CI/CD pipeline (GitHub Actions → build → push → deploy)
