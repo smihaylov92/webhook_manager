@@ -25,7 +25,7 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 ---
 
 ## Current Phase: Phase 1 - Implementation
-**Status:** Milestone 4 complete, starting Milestone 5
+**Status:** Milestone 6 complete, starting Milestone 7
 
 ---
 
@@ -85,20 +85,31 @@ Claude acts as a **technical coach** - guiding through decisions, asking questio
 
 ---
 
+### ADR-012: Kafka + BullMQ coexistence
+- Kafka handles event streaming (ingestion → fan-out to consumers, partitioning, consumer groups)
+- BullMQ handles per-destination delivery retries (exponential backoff, attempt tracking, failure handling)
+- Considered replacing BullMQ entirely with Kafka retry topics, but Kafka lacks native delayed delivery — would require building delay mechanisms that BullMQ already provides
+- Redis stays as BullMQ backend (and future caching/rate limiting)
+- Rationale: each tool does what it's best at, avoids reinventing retry logic
+
+---
+
 ## Coaching Notes
 - Developer is new to how webhooks work in practice — explain business logic, real-world patterns, and what webhook senders actually do (signatures, retries, idempotency keys, etc.) as we encounter them
 - Guide through NestJS patterns (modules, services, controllers, DTOs, pipes) as they come up
 - Developer uses VS Code with GitHub Copilot — remind to review suggestions critically, especially validation decorators and HTTP status codes
 
 ## Resume Point
-**Next task:** Milestone 6 — Event Streaming with Kafka
+**Next task:** Milestone 7 — Containerization & Azure Deployment
 
 Key context:
-- Milestones 1-5 complete — full MVP with CRUD, ingestion, async delivery, retries, inspection, and testing
-- 52 unit tests across all services and DeliveryProcessor (6 suites)
-- ParseUUIDPipe on all UUID route params, stricter DTO validation
-- E2e testing deferred to a future milestone
-- Developer wants to learn Kafka next for event-driven architecture
+- Milestones 1-6 complete — full MVP + Kafka event streaming pipeline
+- 66 unit tests across all services, DeliveryProcessor, KafkaProducer, KafkaConsumer (8 suites)
+- Kafka pipeline: Producer publishes to `webhook-events` topic (3 partitions, keyed by endpointId), Consumer processes and forwards to DeliveryService
+- Kafka + BullMQ coexist: Kafka handles event streaming/fan-out, BullMQ handles per-destination retries with backoff (ADR-012)
+- Dead letter topic (`webhook-events-dlq`): consumer retries 3 times, then sends failed messages to DLQ with error context
+- Consumer never blocks partitions — all errors handled gracefully with DLQ fallback
+- E2e testing deferred to Milestone 13
 
 ---
 
@@ -266,14 +277,32 @@ Key context:
 
 ## Post-MVP Milestones
 
-### Milestone 6: Event Streaming with Kafka — NOT STARTED
+### Milestone 6: Event Streaming with Kafka — COMPLETE
 **Learning goal:** Event-driven architecture, message brokers, async processing at scale
-- [ ] Local Kafka setup (Docker Compose)
-- [ ] Replace/augment BullMQ with Kafka for event processing
-- [ ] Producer: publish incoming webhooks to Kafka topic on ingestion
-- [ ] Consumer: consume from topic and forward to destinations
-- [ ] Learn partitioning, consumer groups, offsets, delivery guarantees
-- [ ] Error handling & dead letter topics
+- [x] Local Kafka setup (Docker Compose)
+  - Kafka 3.9.0 in KRaft mode (no Zookeeper), persistent volume
+  - Admin client creates topics programmatically on startup
+- [x] Producer: publish incoming webhooks to Kafka topic on ingestion
+  - KafkaProducer service with sendMessage(topic, key, message)
+  - EventsService publishes to `webhook-events` topic after DB save
+  - endpointId used as message key for partition affinity
+- [x] Consumer: consume from topic and forward to destinations
+  - KafkaConsumer subscribes to `webhook-events`, calls DeliveryService
+  - Consumer group `webhook-router-group` with RoundRobinAssigner
+- [x] Learn partitioning, consumer groups, offsets, delivery guarantees
+  - Tested 3 partitions with stripe/github/shopify endpoints
+  - Verified consumer group rebalancing with 2 instances (partition redistribution)
+  - Verified partition reclaim on instance failure
+- [x] Kafka + BullMQ coexistence decided (ADR-012)
+  - Kafka handles event streaming and fan-out
+  - BullMQ handles per-destination retry lifecycle with backoff
+- [x] Error handling & dead letter topics
+  - `webhook-events-dlq` topic (1 partition) for failed messages
+  - Consumer retries processing 3 times before sending to DLQ
+  - Parse errors go straight to DLQ (no retry)
+  - DLQ messages include: original event, error, source topic/partition/offset, attempt count, timestamp
+  - Consumer never throws — all errors handled gracefully, offsets always advance
+  - IDlqMessage interface for DLQ message shape
 
 ### Milestone 7: Containerization & Azure Deployment — NOT STARTED
 **Learning goal:** Docker production builds, cloud services, managed infrastructure

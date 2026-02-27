@@ -12,6 +12,8 @@ interface Config {
   };
   kafka: {
     broker: string;
+    maxRetryAttempts?: number;
+    retryBackoffMs?: number;
   };
 }
 
@@ -29,5 +31,7 @@ export default (): Config => ({
   },
   kafka: {
     broker: process.env.KAFKA_BROKER ?? 'localhost:9092',
+    maxRetryAttempts: Number(process.env.KAFKA_MAX_RETRY_ATTEMPTS),
+    retryBackoffMs: Number(process.env.KAFKA_RETRY_BACKOFF_MS),
   },
 });

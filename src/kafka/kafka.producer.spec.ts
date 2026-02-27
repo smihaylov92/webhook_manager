@@ -61,7 +61,10 @@ describe('KafkaProducer', () => {
       expect(mockProducer.connect).toHaveBeenCalled();
       expect(mockAdmin.connect).toHaveBeenCalled();
       expect(mockAdmin.createTopics).toHaveBeenCalledWith({
-        topics: [{ topic: 'webhook-events', numPartitions: 3 }],
+        topics: [
+          { topic: 'webhook-events', numPartitions: 3 },
+          { topic: 'webhook-events-dlq', numPartitions: 1 },
+        ],
       });
       expect(mockAdmin.disconnect).toHaveBeenCalled();
     });

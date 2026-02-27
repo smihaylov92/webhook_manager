@@ -32,7 +32,10 @@ export class KafkaProducer implements OnModuleInit, OnModuleDestroy {
 
     await this.admin
       .createTopics({
-        topics: [{ topic: 'webhook-events', numPartitions: 3 }],
+        topics: [
+          { topic: 'webhook-events', numPartitions: 3 },
+          { topic: 'webhook-events-dlq', numPartitions: 1 },
+        ],
       })
       .catch((error) => {
         this.logger.error('Failed to create Kafka topic:', error);
