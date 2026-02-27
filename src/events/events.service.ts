@@ -33,7 +33,7 @@ export class EventsService {
 
     const createdEvent = this.eventRepository.create(newEvent);
     const savedEvent = await this.eventRepository.save(createdEvent);
-    await this.kafkaProducer.sendMessage('webhook-events', {
+    await this.kafkaProducer.sendMessage('webhook-events', endpoint.id, {
       id: savedEvent.id,
       endpointId: endpoint.id,
       method: savedEvent.method,

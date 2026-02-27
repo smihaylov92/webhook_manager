@@ -96,7 +96,7 @@ describe('EventsService', () => {
         sourceIp: mockEvent.sourceIp,
       });
       expect(mockEventRepository.save).toHaveBeenCalledWith(mockEvent);
-      expect(mockKafkaProducer.sendMessage).toHaveBeenCalledWith('webhook-events', {
+      expect(mockKafkaProducer.sendMessage).toHaveBeenCalledWith('webhook-events', mockEndpoint.id, {
         id: mockEvent.id,
         endpointId: mockEndpoint.id,
         method: mockEvent.method,

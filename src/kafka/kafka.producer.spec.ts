@@ -8,9 +8,16 @@ const mockProducer = {
   send: jest.fn(),
 };
 
+const mockAdmin = {
+  connect: jest.fn(),
+  disconnect: jest.fn(),
+  createTopics: jest.fn(),
+};
+
 jest.mock('kafkajs', () => ({
   Kafka: jest.fn().mockImplementation(() => ({
     producer: () => mockProducer,
+    admin: () => mockAdmin,
   })),
 }));
 
@@ -43,10 +50,20 @@ describe('KafkaProducer', () => {
   });
 
   describe('onModuleInit', () => {
-    it('should connect the producer', async () => {
+    it('should connect the producer and create topics via admin', async () => {
       mockProducer.connect.mockResolvedValue(undefined);
+      mockAdmin.connect.mockResolvedValue(undefined);
+      mockAdmin.createTopics.mockResolvedValue(undefined);
+      mockAdmin.disconnect.mockResolvedValue(undefined);
+
       await service.onModuleInit();
+
       expect(mockProducer.connect).toHaveBeenCalled();
+      expect(mockAdmin.connect).toHaveBeenCalled();
+      expect(mockAdmin.createTopics).toHaveBeenCalledWith({
+        topics: [{ topic: 'webhook-events', numPartitions: 3 }],
+      });
+      expect(mockAdmin.disconnect).toHaveBeenCalled();
     });
   });
 
@@ -59,15 +76,15 @@ describe('KafkaProducer', () => {
   });
 
   describe('sendMessage', () => {
-    it('should send a JSON-serialized message to the topic', async () => {
+    it('should send a JSON-serialized message with key to the topic', async () => {
       mockProducer.send.mockResolvedValue(undefined);
-      const message = { id: 'event-123', body: { test: true } };
+      const message = { id: 'event-123', endpointId: 'ep-001', body: { test: true } };
 
-      await service.sendMessage('webhook-events', message);
+      await service.sendMessage('webhook-events', 'ep-001', message);
 
       expect(mockProducer.send).toHaveBeenCalledWith({
         topic: 'webhook-events',
-        messages: [{ value: JSON.stringify(message) }],
+        messages: [{ key: 'ep-001', value: JSON.stringify(message) }],
       });
     });
 
@@ -75,7 +92,9 @@ describe('KafkaProducer', () => {
       mockProducer.send.mockRejectedValue(new Error('Kafka unavailable'));
 
       // Should not throw — error is caught and logged
-      await expect(service.sendMessage('webhook-events', { test: true })).resolves.toBeUndefined();
+      await expect(
+        service.sendMessage('webhook-events', 'ep-001', { test: true }),
+      ).resolves.toBeUndefined();
     });
   });
 });
