@@ -5,6 +5,7 @@ interface Config {
     name: string;
     username: string;
     password: string;
+    ssl: boolean;
   };
   redis: {
     host: string;
@@ -24,6 +25,7 @@ export default (): Config => ({
     name: process.env.DB_NAME ?? '',
     username: process.env.DB_USERNAME ?? '',
     password: process.env.DB_PASSWORD ?? '',
+    ssl: process.env.NODE_ENV === 'production',
   },
   redis: {
     host: process.env.REDIS_HOST ?? 'localhost',
